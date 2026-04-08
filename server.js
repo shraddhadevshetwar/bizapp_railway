@@ -197,9 +197,14 @@ app.get('/api/backup/oauth2callback', async (req, res) => {
   if (error) return res.send(`<h2>Authorization failed: ${error}</h2>`);
   if (!code) return res.send('<h2>No code received.</h2>');
   try {
-    if (!oauth2Client) loadTokens();
-    const { tokens } = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(tokens);
+    const tokensData = fs.existsSync(TOKENS_FILE) ? JSON.parse(fs.readFileSync(TOKENS_FILE,'utf8')) : {};
+    if (!tokensData.client_id || !tokensData.client_secret)
+      return res.send('<h2>Error: credentials not found. Please re-enter them in the app.</h2>');
+    const redirectUri = getAppUrl() + '/api/backup/oauth2callback';
+    const freshClient = new google.auth.OAuth2(tokensData.client_id, tokensData.client_secret, redirectUri);
+    const { tokens } = await freshClient.getToken(code);
+    freshClient.setCredentials(tokens);
+    oauth2Client = freshClient;
     saveTokens({ tokens });
     res.send(`<!DOCTYPE html><html><body style="font-family:sans-serif;padding:2rem;max-width:500px;margin:auto;">
       <h2 style="color:#2d6a0f;">✅ Google Drive Connected!</h2>
