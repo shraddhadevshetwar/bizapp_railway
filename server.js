@@ -15,7 +15,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ─── Data Directory ───────────────────────────────────────────────────────────
 // On Railway: set DATA_DIR=/data and attach a persistent volume at /data
 // Locally:    falls back to app folder — nothing changes for local use
-const DATA_DIR = process.env.DATA_DIR || __dirname;
+const DATA_DIR = process.env.DATA_DIR || '/data';
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 console.log(`[Storage] Data directory: ${DATA_DIR}`);
 
