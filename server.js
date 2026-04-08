@@ -88,7 +88,7 @@ const BACKUP_LOG_FILE = path.join(DATA_DIR, 'backup_log.json');
 let oauth2Client = null;
 
 function getAppUrl() {
-  return process.env.APP_URL || `http://localhost:${PORT}`;
+  return process.env.APP_URL || `https://bizapprailway-production.up.railway.app`;
 }
 
 function loadTokens() {
@@ -353,4 +353,4 @@ app.get('/api/next-no/:type',(req,res)=>{
 });
 
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-app.listen(PORT,()=>console.log(`App running on http://localhost:${PORT}`));
+app.listen(PORT,()=>console.log(`App running on https://bizapprailway-production.up.railway.app`));
