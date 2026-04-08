@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Business Manager</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f4f3ef;--surface:#fff;--border:#dddbd2;--border2:#c8c5bb;
+  --text:#1c1c1a;--muted:#6a6760;--hint:#a09d95;
+  --green:#2d6a0f;--green-bg:#e8f5dc;
+  --red:#8b2020;--red-bg:#faeaea;
+  --blue:#174f8a;--blue-bg:#e4eef9;
+  --amber:#7a4800;--amber-bg:#fdf0d8;
+  --r:9px;--rs:6px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;min-height:100vh;}
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:210px;background:var(--surface);border-right:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;}
+.sidebar-brand{padding:1.25rem 1rem 0.75rem;font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);}
+.nav-section{padding:.75rem .5rem .25rem;font-size:10px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:1px 6px;border-radius:var(--rs);cursor:pointer;color:var(--muted);font-size:14px;font-weight:500;border:none;background:none;width:calc(100% - 12px);text-align:left;transition:all .12s;}
+.nav-btn:hover{background:var(--bg);color:var(--text);}
+.nav-btn.active{background:var(--text);color:#fff;}
+.nav-icon{font-size:15px;width:18px;text-align:center;}
+.main{flex:1;padding:1.75rem 2rem;overflow-y:auto;}
+.page{display:none;max-width:960px;}
+.page.active{display:block;}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;}
+.ph h1{font-size:20px;font-weight:700;}
+.tabs{display:flex;gap:3px;margin-bottom:1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:3px;width:fit-content;}
+.tab{padding:6px 16px;border-radius:5px;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all .12s;font-family:inherit;}
+.tab:hover{color:var(--text);}
+.tab.active{background:var(--text);color:#fff;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;margin-bottom:1rem;}
+.card-title{font-size:11px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;}
+.field{display:flex;flex-direction:column;gap:4px;}
+label.fl{font-size:12px;font-weight:600;color:var(--muted);}
+input,select,textarea{padding:7px 10px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;width:100%;transition:border-color .12s;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--text);}
+textarea{resize:vertical;}
+input[type=number]{text-align:right;}
+input[readonly]{background:var(--bg);color:var(--muted);cursor:default;}
+.btn{padding:7px 18px;border-radius:var(--rs);border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .12s;}
+.btn:hover{background:var(--bg);}
+.btn-p{background:var(--text);color:#fff;border-color:var(--text);}
+.btn-p:hover{opacity:.85;background:var(--text);}
+.btn-sm{padding:4px 12px;font-size:12px;}
+.btn-d{border-color:#f0a0a0;color:var(--red);background:transparent;}
+.btn-d:hover{background:var(--red-bg);}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--muted);}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:4px;}
+table.it{width:100%;border-collapse:collapse;margin-bottom:6px;}
+table.it th{font-size:11px;font-weight:700;color:var(--hint);text-align:left;padding:0 5px 7px;border-bottom:1px solid var(--border);}
+table.it td{padding:5px 4px;vertical-align:middle;}
+table.it td input{font-size:13px;padding:5px 7px;}
+.add-r{font-size:13px;color:var(--muted);background:none;border:none;cursor:pointer;padding:5px 0;font-family:inherit;}
+.add-r:hover{color:var(--text);}
+.sumbox{background:var(--bg);border-radius:var(--rs);padding:10px 14px;margin-top:8px;}
+.sr{display:flex;justify-content:space-between;padding:4px 0;font-size:14px;}
+.sr.tot{border-top:1px solid var(--border2);margin-top:6px;padding-top:9px;font-size:16px;font-weight:700;}
+.smut{color:var(--muted);}
+.cessrow{display:flex;align-items:center;justify-content:space-between;padding:4px 0;}
+.cessrow input{width:60px;font-size:12px;padding:4px 7px;}
+/* Search bar */
+.search-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;}
+.search-bar input,.search-bar select{padding:6px 10px;font-size:13px;width:auto;flex:1;min-width:140px;}
+/* Data table */
+.data-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:1rem;}
+.table-wrap{overflow-x:auto;}
+table.dt{width:100%;border-collapse:collapse;font-size:13px;}
+table.dt th{font-size:11px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.04em;padding:10px 12px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;background:var(--bg);}
+table.dt td{padding:9px 12px;border-bottom:1px solid var(--border);}
+table.dt tr:last-child td{border-bottom:none;}
+table.dt tbody tr:hover td{background:#faf9f6;}
+.tr{text-align:right;}
+.empty-row td{text-align:center;color:var(--hint);padding:2rem!important;}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;}
+.b-est{background:var(--blue-bg);color:var(--blue);}
+.b-cn{background:var(--amber-bg);color:var(--amber);}
+.b-rec{background:var(--green-bg);color:var(--green);}
+.b-pay{background:var(--red-bg);color:var(--red);}
+/* Ledger */
+.lsum{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1rem;}
+.ls{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:.75rem 1rem;}
+.ls-l{font-size:11px;color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+.ls-v{font-size:18px;font-weight:700;}
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:10px 20px;border-radius:var(--rs);font-size:14px;font-weight:600;opacity:0;transform:translateY(8px);transition:all .2s;z-index:9999;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+/* Print */
+@media print{
+  .sidebar,.nav-btn,.btn,.btn-row,.tabs,.ph button,.no-print,.search-bar{display:none!important;}
+  .shell{display:block;}
+  .main{padding:0;}
+  .page{display:block!important;max-width:100%;}
+  .page:not(.print-target){display:none!important;}
+  body{background:#fff;font-size:12px;}
+  .card{border:1px solid #ccc;margin-bottom:8px;padding:10px;}
+  .sumbox{background:#f5f5f5;}
+  .data-card{border:1px solid #ccc;}
+  table.dt th{background:#f5f5f5;}
+  .print-header{display:block!important;text-align:center;margin-bottom:1rem;border-bottom:2px solid #333;padding-bottom:.75rem;}
+  .print-header h2{font-size:18px;font-weight:700;}
+}
+.print-header{display:none;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="sidebar">
+  <div class="sidebar-brand">&#x1F4CA; Biz Manager</div>
+  <div style="padding:.5rem 0;overflow-y:auto;flex:1;">
+    <div class="nav-section">Master</div>
+    <button class="nav-btn" onclick="goto('parties',this)"><span class="nav-icon">&#x1F465;</span>Party Master</button>
+    <div class="nav-section">Transactions</div>
+    <button class="nav-btn active" onclick="goto('estimate',this)"><span class="nav-icon">&#x1F9FE;</span>Estimate</button>
+    <button class="nav-btn" onclick="goto('credit',this)"><span class="nav-icon">&#x1F4CB;</span>Credit Note</button>
+    <button class="nav-btn" onclick="goto('receipt',this)"><span class="nav-icon">&#x1F4B0;</span>Receipt</button>
+    <button class="nav-btn" onclick="goto('payment',this)"><span class="nav-icon">&#x1F4B8;</span>Payment</button>
+    <div class="nav-section">Reports</div>
+    <button class="nav-btn" onclick="goto('ledger',this)"><span class="nav-icon">&#x1F4D2;</span>Ledger</button>
+    <div class="nav-section">Settings</div>
+    <button class="nav-btn" onclick="goto('backup',this)"><span class="nav-icon">&#x2601;&#xFE0F;</span>Google Backup</button>
+    <div class="nav-section">Session</div>
+    <button class="nav-btn" onclick="lockSession()" style="color:var(--red);"><span class="nav-icon">&#x1F512;</span>Lock session</button>
+  </div>
+</nav>
+
+<div class="main">
+
+<!-- PARTY MASTER -->
+<div class="page active" id="pg-parties">
+  <div class="ph"><h1>Party Master</h1></div>
+  <div class="card">
+    <div class="card-title">Add new party</div>
+    <div class="g2">
+      <div class="field"><label class="fl">Party name</label><input id="pm-name" placeholder="Enter exact party name"/></div>
+      <div class="field"><label class="fl">Opening balance (&#8377;)</label><input id="pm-ob" type="number" value="0"/></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-p" onclick="addParty()">Add party</button></div>
+  </div>
+  <div class="data-card">
+    <div class="table-wrap">
+      <table class="dt">
+        <thead><tr><th>#</th><th>Party name</th><th class="tr">Opening balance</th><th class="no-print">Actions</th></tr></thead>
+        <tbody id="pm-list"><tr class="empty-row"><td colspan="4">No parties yet</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="pm-edit-wrap" style="display:none;">
+    <div class="card" style="border:1px solid var(--border2);">
+      <div class="card-title">Edit party</div>
+      <input type="hidden" id="pm-edit-id"/>
+      <div class="g2">
+        <div class="field"><label class="fl">Party name</label><input id="pm-edit-name"/></div>
+        <div class="field"><label class="fl">Opening balance (&#8377;)</label><input id="pm-edit-ob" type="number"/></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="document.getElementById('pm-edit-wrap').style.display='none'">Cancel</button>
+        <button class="btn btn-p" onclick="saveEditParty()">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ESTIMATE -->
+<div class="page" id="pg-estimate">
+  <div class="ph no-print"><h1>Estimate</h1></div>
+  <div class="tabs no-print">
+    <button class="tab active" onclick="estTab('new',this)">New estimate</button>
+    <button class="tab" onclick="estTab('list',this)">All estimates</button>
+  </div>
+  <div id="est-new">
+    <div class="print-header"><h2>ESTIMATE</h2><p id="print-est-no"></p></div>
+    <div class="card">
+      <div class="card-title">Estimate details</div>
+      <div class="g3">
+        <div class="field"><label class="fl">Estimate no.</label><input id="i-seq" readonly placeholder="Auto"/></div>
+        <div class="field"><label class="fl">Date</label><input id="i-date" type="date"/></div>
+        <div class="field"><label class="fl">Party name</label><select id="i-party"><option value="">&#8212; Select party &#8212;</option></select></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Items</div>
+      <div class="table-wrap">
+        <table class="it">
+          <thead><tr><th style="width:36px">Sr.</th><th>Item name</th><th style="width:80px">QTY</th><th style="width:100px">Rate (&#8377;)</th><th style="width:110px;text-align:right">Total (&#8377;)</th><th class="no-print" style="width:36px"></th></tr></thead>
+          <tbody id="inv-items"></tbody>
+        </table>
+      </div>
+      <button class="add-r no-print" onclick="addInvItem()">+ Add item</button>
+      <div class="sumbox">
+        <div class="sr"><span class="smut">Gross total</span><span id="i-gross">&#8377;0.00</span></div>
+        <div class="cessrow"><span class="smut">Cess</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input id="i-cess-pct" type="number" value="0" min="0" max="100" oninput="calcInv()"/>
+            <span style="color:var(--muted);font-size:12px;">%</span>
+            <span id="i-cess-amt" style="min-width:80px;text-align:right;font-weight:500;">&#8377;0.00</span>
+          </div>
+        </div>
+        <div class="cessrow"><span class="smut">Additional charge</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input id="i-extra-label" placeholder="Label" style="width:100px;text-align:left;"/>
+            <input id="i-extra-amt" type="number" value="0" min="0" oninput="calcInv()" style="width:90px;"/>
+          </div>
+        </div>
+        <div class="sr tot"><span>Net total</span><span id="i-net">&#8377;0.00</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Note</div>
+      <textarea id="i-note" rows="2" placeholder="Any note..."></textarea>
+    </div>
+    <div class="btn-row no-print">
+      <button class="btn btn-ghost" onclick="clearInv()">Clear</button>
+      <button class="btn btn-p" onclick="saveEstimate()">Save estimate</button>
+    </div>
+  </div>
+  <div id="est-list" style="display:none;">
+    <div class="search-bar no-print">
+      <input id="est-search" placeholder="Search by party, no..." oninput="filterEstimates()" style="max-width:220px;"/>
+      <select id="est-filter-party" onchange="filterEstimates()"><option value="">All parties</option></select>
+      <input id="est-from" type="date" title="From date" onchange="filterEstimates()" style="max-width:145px;"/>
+      <input id="est-to" type="date" title="To date" onchange="filterEstimates()" style="max-width:145px;"/>
+      <button class="btn btn-sm" onclick="printList('estimate')">&#x1F5A8; Print list</button>
+    </div>
+    <div class="data-card">
+      <div class="table-wrap">
+        <table class="dt">
+          <thead><tr><th>No.</th><th>Date</th><th>Party</th><th class="tr">Gross</th><th class="tr">Net total</th><th>Verified</th><th class="no-print">Actions</th></tr></thead>
+          <tbody id="inv-list-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CREDIT NOTE -->
+<div class="page" id="pg-credit">
+  <div class="ph no-print"><h1>Credit Note</h1></div>
+  <div class="tabs no-print">
+    <button class="tab active" onclick="cnTab('new',this)">New credit note</button>
+    <button class="tab" onclick="cnTab('list',this)">All credit notes</button>
+  </div>
+  <div id="cn-new">
+    <div class="print-header"><h2>CREDIT NOTE</h2><p id="print-cn-no"></p></div>
+    <div class="card">
+      <div class="card-title">Credit note details</div>
+      <div class="g3">
+        <div class="field"><label class="fl">CN no.</label><input id="cn-seq" readonly placeholder="Auto"/></div>
+        <div class="field"><label class="fl">Date</label><input id="cn-date" type="date"/></div>
+        <div class="field"><label class="fl">Party name</label><select id="cn-party" onchange="loadCnEstimates()"><option value="">&#8212; Select party &#8212;</option></select></div>
+      </div>
+      <div class="g2">
+        <div class="field"><label class="fl">Select estimate no.</label><select id="cn-inv"><option value="">&#8212; Select estimate &#8212;</option></select></div>
+        <div class="field"><label class="fl">Amount (&#8377;)</label><input id="cn-amount" type="number" placeholder="0.00"/></div>
+      </div>
+      <div class="field"><label class="fl">Note</label><input id="cn-note" placeholder="Reason for credit note"/></div>
+    </div>
+    <div class="btn-row no-print">
+      <button class="btn btn-ghost" onclick="clearCn()">Clear</button>
+      <button class="btn btn-p" onclick="saveCreditNote()">Save credit note</button>
+    </div>
+  </div>
+  <div id="cn-list" style="display:none;">
+    <div class="search-bar no-print">
+      <input id="cn-search" placeholder="Search by party, no..." oninput="filterCn()" style="max-width:220px;"/>
+      <select id="cn-filter-party" onchange="filterCn()"><option value="">All parties</option></select>
+      <input id="cn-from" type="date" title="From date" onchange="filterCn()" style="max-width:145px;"/>
+      <input id="cn-to" type="date" title="To date" onchange="filterCn()" style="max-width:145px;"/>
+      <button class="btn btn-sm" onclick="printList('credit-note')">&#x1F5A8; Print list</button>
+    </div>
+    <div class="data-card">
+      <div class="table-wrap">
+        <table class="dt">
+          <thead><tr><th>No.</th><th>Date</th><th>Party</th><th>Estimate</th><th class="tr">Amount</th><th>Note</th><th>Verified</th><th class="no-print">Actions</th></tr></thead>
+          <tbody id="cn-list-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RECEIPT -->
+<div class="page" id="pg-receipt">
+  <div class="ph no-print"><h1>Receipt</h1></div>
+  <div class="tabs no-print">
+    <button class="tab active" onclick="recTab('new',this)">New receipt</button>
+    <button class="tab" onclick="recTab('list',this)">All receipts</button>
+  </div>
+  <div id="rec-new">
+    <div class="print-header"><h2>RECEIPT</h2><p id="print-rec-no"></p></div>
+    <div class="card">
+      <div class="card-title">Receipt details</div>
+      <div class="g3">
+        <div class="field"><label class="fl">Receipt no.</label><input id="r-seq" readonly placeholder="Auto"/></div>
+        <div class="field"><label class="fl">Date</label><input id="r-date" type="date"/></div>
+        <div class="field"><label class="fl">Party name</label><select id="r-party"><option value="">&#8212; Select party &#8212;</option></select></div>
+      </div>
+      <div class="g2">
+        <div class="field"><label class="fl">Amount (&#8377;)</label><input id="r-amount" type="number" placeholder="0.00"/></div>
+        <div class="field"><label class="fl">Remarks</label><input id="r-remarks" placeholder="Notes..."/></div>
+      </div>
+    </div>
+    <div class="btn-row no-print">
+      <button class="btn btn-ghost" onclick="clearRec()">Clear</button>
+      <button class="btn btn-p" onclick="saveReceipt()">Save receipt</button>
+    </div>
+  </div>
+  <div id="rec-list" style="display:none;">
+    <div class="search-bar no-print">
+      <input id="rec-search" placeholder="Search by party, no..." oninput="filterRec()" style="max-width:220px;"/>
+      <select id="rec-filter-party" onchange="filterRec()"><option value="">All parties</option></select>
+      <input id="rec-from" type="date" title="From date" onchange="filterRec()" style="max-width:145px;"/>
+      <input id="rec-to" type="date" title="To date" onchange="filterRec()" style="max-width:145px;"/>
+      <button class="btn btn-sm" onclick="printList('receipt')">&#x1F5A8; Print list</button>
+    </div>
+    <div class="data-card">
+      <div class="table-wrap">
+        <table class="dt">
+          <thead><tr><th>No.</th><th>Date</th><th>Party</th><th class="tr">Amount</th><th>Remarks</th><th>Verified</th><th class="no-print">Actions</th></tr></thead>
+          <tbody id="rec-list-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT -->
+<div class="page" id="pg-payment">
+  <div class="ph no-print"><h1>Payment</h1></div>
+  <div class="tabs no-print">
+    <button class="tab active" onclick="payTab('new',this)">New payment</button>
+    <button class="tab" onclick="payTab('list',this)">All payments</button>
+  </div>
+  <div id="pay-new">
+    <div class="print-header"><h2>PAYMENT VOUCHER</h2><p id="print-pay-no"></p></div>
+    <div class="card">
+      <div class="card-title">Payment details</div>
+      <div class="g3">
+        <div class="field"><label class="fl">Payment no.</label><input id="py-seq" readonly placeholder="Auto"/></div>
+        <div class="field"><label class="fl">Date</label><input id="py-date" type="date"/></div>
+        <div class="field"><label class="fl">Party name</label><select id="py-party"><option value="">&#8212; Select party &#8212;</option></select></div>
+      </div>
+      <div class="g2">
+        <div class="field"><label class="fl">Amount (&#8377;)</label><input id="py-amount" type="number" placeholder="0.00"/></div>
+        <div class="field"><label class="fl">Remarks</label><input id="py-remarks" placeholder="Notes..."/></div>
+      </div>
+    </div>
+    <div class="btn-row no-print">
+      <button class="btn btn-ghost" onclick="clearPay()">Clear</button>
+      <button class="btn btn-p" onclick="savePayment()">Save payment</button>
+    </div>
+  </div>
+  <div id="pay-list" style="display:none;">
+    <div class="search-bar no-print">
+      <input id="pay-search" placeholder="Search by party, no..." oninput="filterPay()" style="max-width:220px;"/>
+      <select id="pay-filter-party" onchange="filterPay()"><option value="">All parties</option></select>
+      <input id="pay-from" type="date" title="From date" onchange="filterPay()" style="max-width:145px;"/>
+      <input id="pay-to" type="date" title="To date" onchange="filterPay()" style="max-width:145px;"/>
+      <button class="btn btn-sm" onclick="printList('payment')">&#x1F5A8; Print list</button>
+    </div>
+    <div class="data-card">
+      <div class="table-wrap">
+        <table class="dt">
+          <thead><tr><th>No.</th><th>Date</th><th>Party</th><th class="tr">Amount</th><th>Remarks</th><th>Verified</th><th class="no-print">Actions</th></tr></thead>
+          <tbody id="pay-list-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEDGER -->
+<div class="page" id="pg-ledger">
+  <div class="ph">
+    <h1>Party Ledger</h1>
+    <button class="btn no-print" onclick="printLedger()">&#x1F5A8; Print ledger</button>
+  </div>
+  <div class="card no-print">
+    <div class="card-title">Filters</div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;align-items:flex-end;margin-bottom:10px;">
+      <div class="field"><label class="fl">Party name</label><select id="l-party"><option value="">&#8212; Select party &#8212;</option></select></div>
+      <div class="field"><label class="fl">From date</label><input id="l-from" type="date"/></div>
+      <div class="field"><label class="fl">To date</label><input id="l-to" type="date"/></div>
+      <button class="btn btn-p" onclick="loadLedger()" style="height:36px;align-self:flex-end;">Show</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end;">
+      <div class="field" style="flex:1;"><label class="fl">Opening balance (&#8377;) for selected party</label><input id="l-opening" type="number" placeholder="0.00" style="max-width:200px;"/></div>
+      <button class="btn btn-sm" onclick="saveOpening()">Update</button>
+    </div>
+  </div>
+  <div id="ledger-out" style="display:none;">
+    <div class="print-header">
+      <h2>PARTY LEDGER</h2>
+      <p id="print-party-name"></p><p id="print-date-range"></p>
+    </div>
+    <div class="lsum">
+      <div class="ls"><div class="ls-l">Opening balance</div><div class="ls-v" id="l-open-val">&#8377;0</div></div>
+      <div class="ls"><div class="ls-l">Total estimated</div><div class="ls-v" id="l-inv-val">&#8377;0</div></div>
+      <div class="ls"><div class="ls-l">Receipts + Credits</div><div class="ls-v" id="l-recv-val" style="color:var(--green)">&#8377;0</div></div>
+      <div class="ls"><div class="ls-l">Payments out</div><div class="ls-v" id="l-pay-val" style="color:var(--red)">&#8377;0</div></div>
+      <div class="ls"><div class="ls-l">Closing balance</div><div class="ls-v" id="l-close-val">&#8377;0</div></div>
+    </div>
+    <div class="data-card">
+      <div class="table-wrap">
+        <table class="dt">
+          <thead><tr><th>Sr.</th><th>Date</th><th>Type</th><th>Reference</th><th>Remarks</th><th class="tr">Debit (&#8377;)</th><th class="tr">Credit (&#8377;)</th><th class="tr">Balance (&#8377;)</th></tr></thead>
+          <tbody id="ledger-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div id="ledger-empty" style="color:var(--hint);font-size:14px;padding:2rem 0;">Select a party and click Show to view the ledger.</div>
+</div>
+
+<!-- ═══ BACKUP PAGE ═══════════════════════════════════════════════════════════ -->
+<div class="page" id="pg-backup">
+  <div class="ph"><h1>☁️ Google Drive Backup</h1></div>
+
+  <!-- Status card -->
+  <div class="card" id="backup-status-card">
+    <div class="card-title">Backup Status</div>
+    <div id="backup-status-body" style="color:var(--muted);font-size:13px;">Loading…</div>
+  </div>
+
+  <!-- Step 1: Credentials -->
+  <div class="card" id="backup-cred-card">
+    <div class="card-title">Step 1 — Google Cloud Credentials</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">
+      You need a <strong>OAuth 2.0 Client ID</strong> from Google Cloud Console.
+      Follow the guide in <code>README.md</code> (Backup section) to get these values.
+    </p>
+    <div class="g2">
+      <div class="field">
+        <label class="fl">Client ID</label>
+        <input type="text" id="b-client-id" placeholder="xxxxxx.apps.googleusercontent.com"/>
+      </div>
+      <div class="field">
+        <label class="fl">Client Secret</label>
+        <input type="password" id="b-client-secret" placeholder="GOCSPX-…"/>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="saveCredentials()">💾 Save Credentials</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Authorize -->
+  <div class="card" id="backup-auth-card">
+    <div class="card-title">Step 2 — Authorize Google Drive Access</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">
+      Click below to open Google's login page. Sign in and grant permission.
+      After approval, come back here — you're done!
+    </p>
+    <div class="btn-row" style="justify-content:flex-start;">
+      <button class="btn btn-p" onclick="authorizeGDrive()">🔗 Connect Google Drive</button>
+      <button class="btn btn-d btn-sm" onclick="disconnectGDrive()" style="margin-left:auto;">Disconnect</button>
+    </div>
+  </div>
+
+  <!-- Manual backup -->
+  <div class="card">
+    <div class="card-title">Manual Backup</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">
+      Trigger an immediate backup right now. The file will appear in your Google Drive folder.
+    </p>
+    <div class="btn-row" style="justify-content:flex-start;align-items:center;gap:12px;">
+      <button class="btn btn-p" onclick="runBackupNow()" id="btn-run-backup">⬆️ Backup Now</button>
+      <span id="backup-run-msg" style="font-size:13px;color:var(--muted);"></span>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="card">
+    <div class="card-title">Backup History (last 30)</div>
+    <div class="table-wrap">
+      <table class="dt">
+        <thead><tr>
+          <th>#</th><th>Date &amp; Time</th><th>Type</th><th>Status</th><th>File</th><th>Message</th>
+        </tr></thead>
+        <tbody id="backup-history-body">
+          <tr class="empty-row"><td colspan="6">No backups yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+</div><!-- end .main -->
+</div><!-- end .shell -->
+
+<!-- Print view container for single record reprint -->
+<div id="reprint-area" style="display:none;"></div>
+
+<!-- Password modal -->
+<div id="pwd-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:9px;border:1px solid #dddbd2;padding:1.75rem;width:320px;">
+    <p style="font-size:15px;font-weight:700;margin-bottom:4px;color:#1c1c1a;" id="pwd-title">Admin password required</p>
+    <p style="font-size:13px;color:#6a6760;margin-bottom:1.25rem;" id="pwd-subtitle">Enter password to continue.</p>
+    <input type="password" id="pwd-input" placeholder="Password" style="margin-bottom:8px;" onkeydown="if(event.key==='Enter')submitPwd()"/>
+    <p id="pwd-error" style="color:#8b2020;font-size:12px;margin-bottom:8px;display:none;">Incorrect password. Try again.</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn" onclick="cancelPwd()">Cancel</button>
+      <button class="btn btn-p" onclick="submitPwd()">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API='';
+let allParties=[];
+let allEstimates=[];
+let allCns=[];
+let allRecs=[];
+let allPays=[];
+let invRowCount=0;
+let _sessionPwd=null;
+let _pwdCallback=null;
+
+// ---- Password ----
+function requirePassword(action,cb){
+  if(_sessionPwd){cb(_sessionPwd);return;}
+  document.getElementById('pwd-overlay').style.display='flex';
+  document.getElementById('pwd-title').textContent='Admin password required';
+  document.getElementById('pwd-subtitle').textContent=action;
+  document.getElementById('pwd-input').value='';
+  document.getElementById('pwd-error').style.display='none';
+  setTimeout(()=>document.getElementById('pwd-input').focus(),50);
+  _pwdCallback=cb;
+}
+async function submitPwd(){
+  const pwd=document.getElementById('pwd-input').value;
+  const res=await fetch(API+'/api/auth/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pwd})});
+  if(res.ok){
+    _sessionPwd=pwd;
+    document.getElementById('pwd-overlay').style.display='none';
+    document.getElementById('pwd-error').style.display='none';
+    if(_pwdCallback){_pwdCallback(pwd);_pwdCallback=null;}
+  }else{
+    document.getElementById('pwd-error').style.display='block';
+    document.getElementById('pwd-input').select();
+  }
+}
+function cancelPwd(){document.getElementById('pwd-overlay').style.display='none';_pwdCallback=null;}
+function lockSession(){_sessionPwd=null;toast('Session locked.');}
+function authH(pwd){return{'Content-Type':'application/json','x-admin-password':pwd};}
+
+// ---- Helpers ----
+const fmt=n=>'&#8377;'+(Number(n)||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const today=()=>new Date().toISOString().split('T')[0];
+function toast(msg,err){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.style.background=err?'#8b2020':'#1c1c1a';
+  el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ---- Verify helper ----
+function verifyRecord(type, id, checked, cb){
+  requirePassword('Mark as verified', async function(pwd){
+    const res = await fetch(API+'/api/'+type+'/'+id+'/verify',{method:'PUT',headers:authHeaders(pwd),body:JSON.stringify({verified:checked?1:0})});
+    if(res.ok){ toast(checked?'Marked as verified.':'Verification removed.'); if(cb)cb(); }
+    else { toast('Failed.',true); if(cb)cb(true); }
+  });
+}
+
+// ---- Navigation ----
+function goto(pg,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pg-'+pg).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(pg==='parties')loadPartyMaster();
+  if(pg==='ledger')loadLedgerParties();
+  if(pg==='backup')loadBackupStatus();
+  loadPartyDropdowns();
+}
+
+// ---- Party dropdowns ----
+async function loadPartyDropdowns(){
+  allParties=await fetch(API+'/api/parties').then(r=>r.json()).catch(()=>[]);
+  const opts='<option value="">&#8212; Select party &#8212;</option>'+allParties.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+  ['i-party','cn-party','r-party','py-party'].forEach(id=>{
+    const s=document.getElementById(id);if(!s)return;
+    const cur=s.value;s.innerHTML=opts;if(cur)s.value=cur;
+  });
+  // filter dropdowns in list views
+  const fp=p=>'<option value="">All parties</option>'+allParties.map(x=>`<option value="${x.name}">${x.name}</option>`).join('');
+  ['est-filter-party','cn-filter-party','rec-filter-party','pay-filter-party'].forEach(id=>{
+    const s=document.getElementById(id);if(s)s.innerHTML=fp();
+  });
+  // ledger
+  const ls=document.getElementById('l-party');
+  if(ls){const cur=ls.value;ls.innerHTML='<option value="">&#8212; Select party &#8212;</option>'+allParties.map(p=>`<option value="${p.id}" data-ob="${p.opening_balance}">${p.name}</option>`).join('');if(cur)ls.value=cur;}
+}
+
+// ---- Party Master ----
+async function addParty(){
+  const name=document.getElementById('pm-name').value.trim();
+  const ob=parseFloat(document.getElementById('pm-ob').value)||0;
+  if(!name){toast('Party name required.',true);return;}
+  if(allParties.find(p=>p.name.toLowerCase()===name.toLowerCase())){toast('"'+name+'" already exists.',true);return;}
+  const res=await fetch(API+'/api/parties',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,opening_balance:ob})});
+  if(res.ok){document.getElementById('pm-name').value='';document.getElementById('pm-ob').value='0';toast('Party added!');await loadPartyDropdowns();loadPartyMaster();}
+  else toast('Failed.',true);
+}
+async function loadPartyMaster(){
+  await loadPartyDropdowns();
+  const tb=document.getElementById('pm-list');
+  if(!allParties.length){tb.innerHTML='<tr class="empty-row"><td colspan="4">No parties yet</td></tr>';return;}
+  tb.innerHTML=allParties.map((p,i)=>`<tr>
+    <td>${i+1}</td><td><strong>${p.name}</strong></td>
+    <td class="tr">${fmt(p.opening_balance)}</td>
+    <td class="no-print"><button class="btn btn-sm" onclick="openEditParty(${p.id},'${p.name.replace(/'/g,"\\'")}',${p.opening_balance})">Edit</button></td>
+  </tr>`).join('');
+}
+function openEditParty(id,name,ob){
+  document.getElementById('pm-edit-id').value=id;
+  document.getElementById('pm-edit-name').value=name;
+  document.getElementById('pm-edit-ob').value=ob;
+  document.getElementById('pm-edit-wrap').style.display='block';
+  document.getElementById('pm-edit-name').focus();
+  document.getElementById('pm-edit-wrap').scrollIntoView({behavior:'smooth'});
+}
+function saveEditParty(){
+  const id=document.getElementById('pm-edit-id').value;
+  const name=document.getElementById('pm-edit-name').value.trim();
+  const ob=parseFloat(document.getElementById('pm-edit-ob').value)||0;
+  if(!name){toast('Name cannot be empty.',true);return;}
+  if(allParties.find(p=>p.name.toLowerCase()===name.toLowerCase()&&p.id!=id)){toast('Party already exists.',true);return;}
+  requirePassword('Edit party',async pwd=>{
+    const res=await fetch(API+'/api/parties/'+id,{method:'PUT',headers:authH(pwd),body:JSON.stringify({name,opening_balance:ob})});
+    if(res.ok){document.getElementById('pm-edit-wrap').style.display='none';toast('Party updated!');await loadPartyDropdowns();loadPartyMaster();}
+    else toast('Failed.',true);
+  });
+}
+
+// ---- Verified checkbox ----
+function verifyCheck(type,id,seq,checked){
+  requirePassword('Verify entry',async pwd=>{
+    const url=`${API}/api/${type}/${id}/verify`;
+    await fetch(url,{method:'PUT',headers:authH(pwd),body:JSON.stringify({verified:checked})});
+    toast(checked?'Marked verified.':'Unmarked.');
+  });
+}
+
+// ---- Print helpers ----
+function printLedger(){
+  const out = document.getElementById('ledger-out');
+  if(!out || out.style.display==='none'){toast('Please load a ledger first.',true);return;}
+  const partyName = document.getElementById('print-party-name').textContent;
+  const dateRange = document.getElementById('print-date-range').textContent;
+  const summaryHtml = document.getElementById('pg-ledger').querySelector('.lsum').outerHTML;
+  const tableHtml = document.getElementById('pg-ledger').querySelector('.data-card').outerHTML;
+  const win = window.open('','_blank','width=900,height=700');
+  win.document.write(`<!DOCTYPE html><html><head><title>Ledger</title>
+  <style>
+    body{font-family:sans-serif;padding:2rem;font-size:13px;color:#1c1c1a;}
+    h2{text-align:center;margin-bottom:4px;font-size:20px;}
+    .sub{text-align:center;color:#666;margin-bottom:1.5rem;font-size:13px;}
+    .lsum{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1rem;}
+    .ls{border:1px solid #ccc;border-radius:6px;padding:8px 10px;}
+    .ls-l{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;}
+    .ls-v{font-size:16px;font-weight:700;}
+    .data-card{border:1px solid #ccc;border-radius:6px;overflow:hidden;}
+    table.dt{width:100%;border-collapse:collapse;font-size:12px;}
+    table.dt th{background:#f5f5f5;padding:8px 10px;border-bottom:1px solid #ccc;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.04em;}
+    table.dt td{padding:8px 10px;border-bottom:1px solid #eee;}
+    table.dt tr:last-child td{border-bottom:none;}
+    .tr{text-align:right;}
+    .no-print{display:none!important;}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;}
+    .b-est{background:#e4eef9;color:#174f8a;}
+    .b-cn{background:#fdf0d8;color:#7a4800;}
+    .b-rec{background:#e8f5dc;color:#2d6a0f;}
+    .b-pay{background:#faeaea;color:#8b2020;}
+    a{color:#174f8a;}
+    @media print{button{display:none!important;}}
+  </style></head><body>
+  <h2>PARTY LEDGER</h2>
+  <p class="sub">${partyName} &nbsp;|&nbsp; ${dateRange}</p>
+  ${summaryHtml}
+  ${tableHtml}
+  <br/><button onclick="window.print()" style="padding:8px 20px;cursor:pointer;margin-top:8px;">&#x1F5A8; Print</button>
+  </body></html>`);
+  win.document.close();
+}
+
+// ---- ESTIMATE ----
+document.getElementById('i-date').value=today();
+
+function estTab(t,btn){
+  document.getElementById('est-new').style.display=t==='new'?'block':'none';
+  document.getElementById('est-list').style.display=t==='list'?'block':'none';
+  document.querySelectorAll('#pg-estimate .tab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(t==='list')loadEstList();
+}
+function addInvItem(){
+  const id=invRowCount++;
+  const tr=document.createElement('tr');tr.id='irow-'+id;
+  tr.innerHTML=`<td><input value="${invRowCount}" style="width:32px;text-align:center;" readonly/></td>
+    <td><input type="text" placeholder="Item name" style="min-width:140px;"/></td>
+    <td><input type="number" value="1" min="0" oninput="calcInv()" style="width:70px;"/></td>
+    <td><input type="number" value="0" min="0" oninput="calcInv()" style="width:90px;"/></td>
+    <td class="tr" id="iamt-${id}" style="color:var(--muted);font-size:13px;">&#8377;0.00</td>
+    <td class="no-print"><button class="btn btn-sm btn-d" onclick="rmRow(${id})">&#x2715;</button></td>`;
+  document.getElementById('inv-items').appendChild(tr);calcInv();
+}
+function rmRow(id){document.getElementById('irow-'+id)?.remove();calcInv();}
+function calcInv(){
+  let gross=0;
+  document.querySelectorAll('#inv-items tr').forEach(tr=>{
+    const ins=tr.querySelectorAll('input');
+    const q=parseFloat(ins[2]?.value)||0,r=parseFloat(ins[3]?.value)||0,l=q*r;gross+=l;
+    const a=tr.querySelector('[id^="iamt-"]');if(a)a.innerHTML=fmt(l);
+  });
+  const cp=parseFloat(document.getElementById('i-cess-pct').value)||0;
+  const ca=gross*cp/100;
+  const ex=parseFloat(document.getElementById('i-extra-amt').value)||0;
+  document.getElementById('i-gross').innerHTML=fmt(gross);
+  document.getElementById('i-cess-amt').innerHTML=fmt(ca);
+  document.getElementById('i-net').innerHTML=fmt(gross+ca+ex);
+}
+function getItems(){
+  const items=[];
+  document.querySelectorAll('#inv-items tr').forEach(tr=>{
+    const ins=tr.querySelectorAll('input');
+    const name=ins[1]?.value?.trim(),q=parseFloat(ins[2]?.value)||0,r=parseFloat(ins[3]?.value)||0;
+    if(name)items.push({item_name:name,qty:q,rate:r,total:q*r});
+  });
+  return items;
+}
+function clearInv(){document.getElementById('inv-items').innerHTML='';invRowCount=0;
+  document.getElementById('i-cess-pct').value=0;document.getElementById('i-extra-amt').value=0;
+  document.getElementById('i-extra-label').value='';document.getElementById('i-note').value='';
+  document.getElementById('i-party').value='';calcInv();}
+
+async function saveEstimate(){
+  const party_name=document.getElementById('i-party').value;
+  const inv_date=document.getElementById('i-date').value;
+  const items=getItems();
+  if(!party_name||!inv_date){toast('Date and Party are required.',true);return;}
+  if(!items.length){toast('Add at least one item.',true);return;}
+  const gross=items.reduce((s,i)=>s+i.total,0);
+  const cess_pct=parseFloat(document.getElementById('i-cess-pct').value)||0;
+  const cess_amount=gross*cess_pct/100;
+  const extra_charge_amount=parseFloat(document.getElementById('i-extra-amt').value)||0;
+  const extra_charge_label=document.getElementById('i-extra-label').value.trim();
+  const net_total=gross+cess_amount+extra_charge_amount;
+  const body={inv_date,party_name,items,gross_total:gross,cess_pct,cess_amount,extra_charge_label,extra_charge_amount,net_total,note:document.getElementById('i-note').value};
+  const res=await fetch(API+'/api/invoices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(res.ok){clearInv();toast('Estimate saved!');await loadPartyDropdowns();}
+  else toast('Failed.',true);
+}
+async function loadEstList(){
+  allEstimates=await fetch(API+'/api/invoices').then(r=>r.json()).catch(()=>[]);
+  renderEstList(allEstimates);
+}
+function renderEstList(data){
+  const tb=document.getElementById('inv-list-body');
+  if(!data.length){tb.innerHTML='<tr class="empty-row"><td colspan="7">No estimates yet</td></tr>';return;}
+  tb.innerHTML=data.map(i=>`<tr>
+    <td><strong>EST-${i.seq}</strong></td>
+    <td>${i.inv_date}</td><td>${i.party_name}</td>
+    <td class="tr">${fmt(i.gross_total)}</td>
+    <td class="tr"><strong>${fmt(i.net_total)}</strong></td>
+    <td><input type="checkbox" ${i.verified?'checked':''} onchange="verifyCheck('invoices',${i.id},${i.seq},this.checked)" title="Verified"/></td>
+    <td class="no-print" style="display:flex;gap:4px;flex-wrap:wrap;">
+      <button class="btn btn-sm" onclick="printEntry('estimate',${i.id})">&#x1F5A8;</button>
+      <button class="btn btn-sm btn-d" onclick="delEst(${i.id})">Delete</button>
+    </td>
+  </tr>`).join('');
+}
+function filterEstimates(){
+  const q=document.getElementById('est-search').value.toLowerCase();
+  const party=document.getElementById('est-filter-party').value;
+  const from=document.getElementById('est-from').value;
+  const to=document.getElementById('est-to').value;
+  renderEstList(allEstimates.filter(i=>{
+    const mp=!party||i.party_name===party;
+    const mq=!q||i.party_name.toLowerCase().includes(q)||('est-'+i.seq).includes(q)||String(i.seq).includes(q);
+    const mf=!from||i.inv_date>=from;
+    const mt=!to||i.inv_date<=to;
+    return mp&&mq&&mf&&mt;
+  }));
+}
+function delEst(id){
+  if(!confirm('Delete this estimate?'))return;
+  requirePassword('Delete estimate',async pwd=>{
+    await fetch(API+'/api/invoices/'+id,{method:'DELETE',headers:{'x-admin-password':pwd}});
+    toast('Deleted.');loadEstList();
+  });
+}
+
+// ---- CREDIT NOTE ----
+document.getElementById('cn-date').value=today();
+function cnTab(t,btn){
+  document.getElementById('cn-new').style.display=t==='new'?'block':'none';
+  document.getElementById('cn-list').style.display=t==='list'?'block':'none';
+  document.querySelectorAll('#pg-credit .tab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(t==='list')loadCnList();
+}
+async function loadCnEstimates(){
+  const party=document.getElementById('cn-party').value;
+  const sel=document.getElementById('cn-inv');
+  sel.innerHTML='<option value="">&#8212; Select estimate &#8212;</option>';
+  if(!party)return;
+  const invs=await fetch(API+'/api/invoices').then(r=>r.json()).catch(()=>[]);
+  sel.innerHTML='<option value="">&#8212; Select estimate &#8212;</option>'+invs.filter(i=>i.party_name===party).map(i=>`<option value="${i.id}">EST-${i.seq} (${fmt(i.net_total)})</option>`).join('');
+}
+function clearCn(){['cn-amount','cn-note'].forEach(id=>document.getElementById(id).value='');document.getElementById('cn-party').value='';document.getElementById('cn-inv').innerHTML='<option value="">&#8212; Select estimate &#8212;</option>';}
+async function saveCreditNote(){
+  const party_name=document.getElementById('cn-party').value;
+  const cn_date=document.getElementById('cn-date').value;
+  const invoice_id=document.getElementById('cn-inv').value;
+  const amount=parseFloat(document.getElementById('cn-amount').value)||0;
+  const note=document.getElementById('cn-note').value.trim();
+  if(!party_name||!cn_date||!amount){toast('Date, Party and Amount required.',true);return;}
+  const res=await fetch(API+'/api/credit-notes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cn_date,party_name,invoice_id:invoice_id||null,amount,note})});
+  if(res.ok){clearCn();toast('Credit note saved!');}else toast('Failed.',true);
+}
+async function loadCnList(){
+  allCns=await fetch(API+'/api/credit-notes').then(r=>r.json()).catch(()=>[]);
+  renderCnList(allCns);
+}
+function renderCnList(data){
+  const tb=document.getElementById('cn-list-body');
+  if(!data.length){tb.innerHTML='<tr class="empty-row"><td colspan="8">No credit notes yet</td></tr>';return;}
+  tb.innerHTML=data.map(c=>`<tr>
+    <td><strong>CN-${c.seq}</strong></td>
+    <td>${c.cn_date}</td><td>${c.party_name}</td>
+    <td>${c.inv_seq?'EST-'+c.inv_seq:'&#8212;'}</td>
+    <td class="tr"><strong>${fmt(c.amount)}</strong></td>
+    <td>${c.note||'&#8212;'}</td>
+    <td><input type="checkbox" ${c.verified?'checked':''} onchange="verifyCheck('credit-notes',${c.id},${c.seq},this.checked)" title="Verified"/></td>
+    <td class="no-print" style="display:flex;gap:4px;flex-wrap:wrap;">
+      <button class="btn btn-sm" onclick="printEntry('credit-note',${c.id})">&#x1F5A8;</button>
+      <button class="btn btn-sm btn-d" onclick="delCn(${c.id})">Delete</button>
+    </td>
+  </tr>`).join('');
+}
+function filterCn(){
+  const q=document.getElementById('cn-search').value.toLowerCase();
+  const party=document.getElementById('cn-filter-party').value;
+  const from=document.getElementById('cn-from').value;
+  const to=document.getElementById('cn-to').value;
+  renderCnList(allCns.filter(c=>{
+    const mp=!party||c.party_name===party;
+    const mq=!q||c.party_name.toLowerCase().includes(q)||('cn-'+c.seq).includes(q)||String(c.seq).includes(q);
+    const mf=!from||c.cn_date>=from;
+    const mt=!to||c.cn_date<=to;
+    return mp&&mq&&mf&&mt;
+  }));
+}
+function delCn(id){
+  if(!confirm('Delete this credit note?'))return;
+  requirePassword('Delete credit note',async pwd=>{
+    await fetch(API+'/api/credit-notes/'+id,{method:'DELETE',headers:{'x-admin-password':pwd}});
+    toast('Deleted.');loadCnList();
+  });
+}
+
+// ---- RECEIPT ----
+document.getElementById('r-date').value=today();
+function recTab(t,btn){
+  document.getElementById('rec-new').style.display=t==='new'?'block':'none';
+  document.getElementById('rec-list').style.display=t==='list'?'block':'none';
+  document.querySelectorAll('#pg-receipt .tab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(t==='list')loadRecList();
+}
+function clearRec(){['r-amount','r-remarks'].forEach(id=>document.getElementById(id).value='');document.getElementById('r-party').value='';}
+async function saveReceipt(){
+  const party_name=document.getElementById('r-party').value;
+  const rec_date=document.getElementById('r-date').value;
+  const amount=parseFloat(document.getElementById('r-amount').value)||0;
+  const remarks=document.getElementById('r-remarks').value.trim();
+  if(!party_name||!rec_date||!amount){toast('Date, Party and Amount required.',true);return;}
+  const res=await fetch(API+'/api/receipts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rec_date,party_name,amount,remarks})});
+  if(res.ok){clearRec();toast('Receipt saved!');}else toast('Failed.',true);
+}
+async function loadRecList(){
+  allRecs=await fetch(API+'/api/receipts').then(r=>r.json()).catch(()=>[]);
+  renderRecList(allRecs);
+}
+function renderRecList(data){
+  const tb=document.getElementById('rec-list-body');
+  if(!data.length){tb.innerHTML='<tr class="empty-row"><td colspan="7">No receipts yet</td></tr>';return;}
+  tb.innerHTML=data.map(r=>`<tr>
+    <td><strong>REC-${r.seq}</strong></td>
+    <td>${r.rec_date}</td><td>${r.party_name}</td>
+    <td class="tr"><strong>${fmt(r.amount)}</strong></td>
+    <td>${r.remarks||'&#8212;'}</td>
+    <td><input type="checkbox" ${r.verified?'checked':''} onchange="verifyCheck('receipts',${r.id},${r.seq},this.checked)" title="Verified"/></td>
+    <td class="no-print" style="display:flex;gap:4px;flex-wrap:wrap;">
+      <button class="btn btn-sm" onclick="printEntry('receipt',${r.id})">&#x1F5A8;</button>
+      <button class="btn btn-sm btn-d" onclick="delRec(${r.id})">Delete</button>
+    </td>
+  </tr>`).join('');
+}
+function filterRec(){
+  const q=document.getElementById('rec-search').value.toLowerCase();
+  const party=document.getElementById('rec-filter-party').value;
+  const from=document.getElementById('rec-from').value;
+  const to=document.getElementById('rec-to').value;
+  renderRecList(allRecs.filter(r=>{
+    const mp=!party||r.party_name===party;
+    const mq=!q||r.party_name.toLowerCase().includes(q)||('rec-'+r.seq).includes(q)||String(r.seq).includes(q);
+    const mf=!from||r.rec_date>=from;
+    const mt=!to||r.rec_date<=to;
+    return mp&&mq&&mf&&mt;
+  }));
+}
+function delRec(id){
+  if(!confirm('Delete this receipt?'))return;
+  requirePassword('Delete receipt',async pwd=>{
+    await fetch(API+'/api/receipts/'+id,{method:'DELETE',headers:{'x-admin-password':pwd}});
+    toast('Deleted.');loadRecList();
+  });
+}
+
+// ---- PAYMENT ----
+document.getElementById('py-date').value=today();
+function payTab(t,btn){
+  document.getElementById('pay-new').style.display=t==='new'?'block':'none';
+  document.getElementById('pay-list').style.display=t==='list'?'block':'none';
+  document.querySelectorAll('#pg-payment .tab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(t==='list')loadPayList();
+}
+function clearPay(){['py-amount','py-remarks'].forEach(id=>document.getElementById(id).value='');document.getElementById('py-party').value='';}
+async function savePayment(){
+  const party_name=document.getElementById('py-party').value;
+  const pay_date=document.getElementById('py-date').value;
+  const amount=parseFloat(document.getElementById('py-amount').value)||0;
+  const remarks=document.getElementById('py-remarks').value.trim();
+  if(!party_name||!pay_date||!amount){toast('Date, Party and Amount required.',true);return;}
+  const res=await fetch(API+'/api/payments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pay_date,party_name,amount,remarks})});
+  if(res.ok){clearPay();toast('Payment saved!');}else toast('Failed.',true);
+}
+async function loadPayList(){
+  allPays=await fetch(API+'/api/payments').then(r=>r.json()).catch(()=>[]);
+  renderPayList(allPays);
+}
+function renderPayList(data){
+  const tb=document.getElementById('pay-list-body');
+  if(!data.length){tb.innerHTML='<tr class="empty-row"><td colspan="7">No payments yet</td></tr>';return;}
+  tb.innerHTML=data.map(p=>`<tr>
+    <td><strong>PAY-${p.seq}</strong></td>
+    <td>${p.pay_date}</td><td>${p.party_name}</td>
+    <td class="tr"><strong>${fmt(p.amount)}</strong></td>
+    <td>${p.remarks||'&#8212;'}</td>
+    <td><input type="checkbox" ${p.verified?'checked':''} onchange="verifyCheck('payments',${p.id},${p.seq},this.checked)" title="Verified"/></td>
+    <td class="no-print" style="display:flex;gap:4px;flex-wrap:wrap;">
+      <button class="btn btn-sm" onclick="printEntry('payment',${p.id})">&#x1F5A8;</button>
+      <button class="btn btn-sm btn-d" onclick="delPay(${p.id})">Delete</button>
+    </td>
+  </tr>`).join('');
+}
+function filterPay(){
+  const q=document.getElementById('pay-search').value.toLowerCase();
+  const party=document.getElementById('pay-filter-party').value;
+  const from=document.getElementById('pay-from').value;
+  const to=document.getElementById('pay-to').value;
+  renderPayList(allPays.filter(p=>{
+    const mp=!party||p.party_name===party;
+    const mq=!q||p.party_name.toLowerCase().includes(q)||('pay-'+p.seq).includes(q)||String(p.seq).includes(q);
+    const mf=!from||p.pay_date>=from;
+    const mt=!to||p.pay_date<=to;
+    return mp&&mq&&mf&&mt;
+  }));
+}
+function delPay(id){
+  if(!confirm('Delete this payment?'))return;
+  requirePassword('Delete payment',async pwd=>{
+    await fetch(API+'/api/payments/'+id,{method:'DELETE',headers:{'x-admin-password':pwd}});
+    toast('Deleted.');loadPayList();
+  });
+}
+
+// ---- Print single entry ----
+async function printEntry(type,id){
+  let html='';
+  if(type==='estimate'){
+    const d=await fetch(API+'/api/invoices/'+id).then(r=>r.json());
+    html=`<h2 style="text-align:center;margin-bottom:8px;">ESTIMATE</h2>
+    <p style="text-align:center;margin-bottom:16px;color:#555;">EST-${d.seq} &nbsp;|&nbsp; ${d.inv_date} &nbsp;|&nbsp; ${d.party_name}</p>
+    <table border="1" cellpadding="6" cellspacing="0" style="width:100%;border-collapse:collapse;margin-bottom:12px;">
+      <thead><tr style="background:#f5f5f5;"><th>Sr</th><th>Item</th><th>QTY</th><th>Rate</th><th>Total</th></tr></thead>
+      <tbody>${(d.items||[]).map(i=>`<tr><td>${i.sr}</td><td>${i.item_name}</td><td>${i.qty}</td><td>&#8377;${i.rate.toLocaleString('en-IN')}</td><td>&#8377;${i.total.toLocaleString('en-IN')}</td></tr>`).join('')}</tbody>
+    </table>
+    <p>Gross Total: <strong>&#8377;${d.gross_total.toLocaleString('en-IN',{minimumFractionDigits:2})}</strong></p>
+    ${d.cess_amount?`<p>Cess (${d.cess_pct}%): &#8377;${d.cess_amount.toLocaleString('en-IN',{minimumFractionDigits:2})}</p>`:''}
+    ${d.extra_charge_amount?`<p>${d.extra_charge_label||'Additional'}: &#8377;${d.extra_charge_amount.toLocaleString('en-IN',{minimumFractionDigits:2})}</p>`:''}
+    <p style="font-size:16px;font-weight:700;margin-top:8px;">Net Total: &#8377;${d.net_total.toLocaleString('en-IN',{minimumFractionDigits:2})}</p>
+    ${d.note?`<p style="margin-top:8px;color:#555;">Note: ${d.note}</p>`:''}`;
+  } else if(type==='receipt'){
+    const d=await fetch(API+'/api/receipts').then(r=>r.json());
+    const rec=d.find(x=>x.id===id);
+    html=`<h2 style="text-align:center;margin-bottom:8px;">RECEIPT</h2>
+    <p style="text-align:center;margin-bottom:16px;color:#555;">REC-${rec.seq} &nbsp;|&nbsp; ${rec.rec_date} &nbsp;|&nbsp; ${rec.party_name}</p>
+    <p style="font-size:18px;font-weight:700;">Amount: &#8377;${rec.amount.toLocaleString('en-IN',{minimumFractionDigits:2})}</p>
+    ${rec.remarks?`<p style="margin-top:8px;color:#555;">Remarks: ${rec.remarks}</p>`:''}`;
+  } else if(type==='payment'){
+    const d=await fetch(API+'/api/payments').then(r=>r.json());
+    const pay=d.find(x=>x.id===id);
+    html=`<h2 style="text-align:center;margin-bottom:8px;">PAYMENT VOUCHER</h2>
+    <p style="text-align:center;margin-bottom:16px;color:#555;">PAY-${pay.seq} &nbsp;|&nbsp; ${pay.pay_date} &nbsp;|&nbsp; ${pay.party_name}</p>
+    <p style="font-size:18px;font-weight:700;">Amount: &#8377;${pay.amount.toLocaleString('en-IN',{minimumFractionDigits:2})}</p>
+    ${pay.remarks?`<p style="margin-top:8px;color:#555;">Remarks: ${pay.remarks}</p>`:''}`;
+  } else if(type==='credit-note'){
+    const d=await fetch(API+'/api/credit-notes').then(r=>r.json());
+    const cn=d.find(x=>x.id===id);
+    html=`<h2 style="text-align:center;margin-bottom:8px;">CREDIT NOTE</h2>
+    <p style="text-align:center;margin-bottom:16px;color:#555;">CN-${cn.seq} &nbsp;|&nbsp; ${cn.cn_date} &nbsp;|&nbsp; ${cn.party_name}</p>
+    <p style="font-size:18px;font-weight:700;">Amount: &#8377;${cn.amount.toLocaleString('en-IN',{minimumFractionDigits:2})}</p>
+    ${cn.note?`<p style="margin-top:8px;color:#555;">Note: ${cn.note}</p>`:''}`;
+  }
+  const win=window.open('','_blank','width=700,height=600');
+  win.document.write(`<!DOCTYPE html><html><head><title>Print</title><style>body{font-family:sans-serif;padding:2rem;font-size:14px;}table{font-size:13px;}@media print{button{display:none!important;}}</style></head><body>
+    ${html}
+    <br/><button onclick="window.print()" style="padding:8px 20px;margin-top:16px;cursor:pointer;">&#x1F5A8; Print</button>
+  </body></html>`);
+  win.document.close();
+}
+
+// ---- Print list ----
+function printList(type){
+  let tableHtml='', title='';
+  if(type==='estimate'){
+    title='Estimates';
+    tableHtml=document.getElementById('inv-list-body').closest('table').outerHTML;
+  } else if(type==='credit-note'){
+    title='Credit Notes';
+    tableHtml=document.getElementById('cn-list-body').closest('table').outerHTML;
+  } else if(type==='receipt'){
+    title='Receipts';
+    tableHtml=document.getElementById('rec-list-body').closest('table').outerHTML;
+  } else if(type==='payment'){
+    title='Payments';
+    tableHtml=document.getElementById('pay-list-body').closest('table').outerHTML;
+  }
+  const win=window.open('','_blank','width=900,height=700');
+  win.document.write(`<!DOCTYPE html><html><head><title>${title}</title>
+  <style>
+    body{font-family:sans-serif;padding:2rem;font-size:13px;}
+    h2{margin-bottom:1rem;font-size:18px;}
+    table{width:100%;border-collapse:collapse;font-size:12px;}
+    th{background:#f5f5f5;padding:8px 10px;border-bottom:1px solid #ccc;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.04em;}
+    td{padding:8px 10px;border-bottom:1px solid #eee;}
+    tr:last-child td{border-bottom:none;}
+    .tr{text-align:right;}
+    .no-print,input[type=checkbox]{display:none!important;}
+    @media print{button{display:none!important;}}
+  </style></head><body>
+  <h2>${title}</h2>
+  <p style="color:#666;font-size:12px;margin-bottom:1rem;">Printed on ${new Date().toLocaleDateString('en-IN')}</p>
+  ${tableHtml}
+  <br/><button onclick="window.print()" style="padding:8px 20px;cursor:pointer;margin-top:8px;">&#x1F5A8; Print</button>
+  </body></html>`);
+  win.document.close();
+}
+
+// ---- LEDGER ----
+async function loadLedgerParties(){await loadPartyDropdowns();
+  const sel=document.getElementById('l-party');
+  if(sel)sel.onchange=function(){const opt=sel.options[sel.selectedIndex];document.getElementById('l-opening').value=opt.dataset.ob||0;};
+}
+function saveOpening(){
+  const sel=document.getElementById('l-party');const pid=sel.value;
+  if(!pid){toast('Select a party.',true);return;}
+  const ob=parseFloat(document.getElementById('l-opening').value)||0;
+  requirePassword('Update opening balance',async pwd=>{
+    const res=await fetch(API+'/api/parties/'+pid,{method:'PUT',headers:authH(pwd),body:JSON.stringify({opening_balance:ob})});
+    if(res.ok){const opt=sel.options[sel.selectedIndex];opt.dataset.ob=ob;toast('Opening balance updated!');}
+    else toast('Failed.',true);
+  });
+}
+async function loadLedger(){
+  const pid=document.getElementById('l-party').value;
+  if(!pid){toast('Select a party.',true);return;}
+  const from=document.getElementById('l-from').value;
+  const to=document.getElementById('l-to').value;
+  let url=API+'/api/ledger?party_id='+pid;
+  if(from)url+='&from_date='+from;if(to)url+='&to_date='+to;
+  const data=await fetch(url).then(r=>r.json()).catch(()=>null);
+  if(!data){toast('Error loading ledger.',true);return;}
+  const sel=document.getElementById('l-party');
+  const pname=sel.options[sel.selectedIndex]?.text||'';
+  document.getElementById('print-party-name').textContent='Party: '+pname;
+  document.getElementById('print-date-range').textContent=(from||'Beginning')+' to '+(to||'Today');
+  const totalInv=data.transactions.filter(t=>t.type==='Estimate').reduce((s,t)=>s+t.debit,0);
+  const totalRecvCr=data.transactions.filter(t=>t.type==='Receipt'||t.type==='Credit Note').reduce((s,t)=>s+t.credit,0);
+  const totalPay=data.transactions.filter(t=>t.type==='Payment').reduce((s,t)=>s+t.debit,0);
+  document.getElementById('l-open-val').innerHTML=fmt(data.opening_balance);
+  document.getElementById('l-inv-val').innerHTML=fmt(totalInv);
+  document.getElementById('l-recv-val').innerHTML=fmt(totalRecvCr);
+  document.getElementById('l-pay-val').innerHTML=fmt(totalPay);
+  document.getElementById('l-close-val').innerHTML=fmt(data.closing_balance);
+  document.getElementById('l-close-val').style.color=data.closing_balance>0?'var(--red)':'var(--green)';
+  const tb=document.getElementById('ledger-body');
+  if(!data.transactions.length){tb.innerHTML='<tr class="empty-row"><td colspan="8">No transactions in this period</td></tr>';
+  }else{
+    const typeBadge={Estimate:'b-est','Credit Note':'b-cn',Receipt:'b-rec',Payment:'b-pay'};
+    const typeLink={Estimate:'estimate','Credit Note':'credit-note',Receipt:'receipt',Payment:'payment'};
+    const typePrefix={Estimate:'EST','Credit Note':'CN',Receipt:'REC',Payment:'PAY'};
+    let rows=`<tr style="background:#faf9f6;font-style:italic;">
+      <td>&#8212;</td><td colspan="2" style="color:var(--muted);">Opening balance</td>
+      <td></td><td></td><td></td><td></td>
+      <td class="tr" style="font-weight:600;">${fmt(data.opening_balance)}</td>
+    </tr>`;
+    rows+=data.transactions.map((t,idx)=>{
+      const ltype=typeLink[t.type]||'';
+      const prefix=typePrefix[t.type]||'';
+      const refLink=`<a href="#" onclick="printEntry('${ltype}',${t.id});return false;" style="color:var(--blue);text-decoration:underline;">${prefix}-${t.ref}</a>`;
+      return `<tr>
+        <td style="color:var(--muted);font-size:12px;">${idx+1}</td>
+        <td>${t.date||'&#8212;'}</td>
+        <td><span class="badge ${typeBadge[t.type]||''}">${t.type}</span></td>
+        <td>${refLink}</td>
+        <td style="color:var(--muted);font-size:12px;">${t.remarks||'&#8212;'}</td>
+        <td class="tr" style="color:var(--red);">${t.debit>0?fmt(t.debit):''}</td>
+        <td class="tr" style="color:var(--green);">${t.credit>0?fmt(t.credit):''}</td>
+        <td class="tr" style="font-weight:600;color:${t.balance>0?'var(--red)':'var(--green)'};">${fmt(t.balance)}</td>
+      </tr>`;
+    }).join('');
+    tb.innerHTML=rows;
+  }
+  document.getElementById('ledger-out').style.display='block';
+  document.getElementById('ledger-empty').style.display='none';
+}
+
+
+// ─── Backup Page ─────────────────────────────────────────────────────────────
+async function loadBackupStatus() {
+  if (!_sessionPwd) { requirePassword('View backup settings', loadBackupStatus); return; }
+  try {
+    const res = await fetch(API+'/api/backup/status', { headers: { 'x-admin-password': _sessionPwd } });
+    const data = await res.json();
+    const body = document.getElementById('backup-status-body');
+    const credCard = document.getElementById('backup-cred-card');
+
+    const mkStat = (label, val, ok) =>
+      `<div style="background:var(--bg);border-radius:6px;padding:10px 14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--hint);text-transform:uppercase;margin-bottom:3px;">${label}</div>
+        <div style="font-size:14px;font-weight:700;color:${ok?'var(--green)':'var(--red)'};">${val}</div>
+      </div>`;
+    let html = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:10px;">`;
+    html += mkStat('Credentials', data.hasCredentials ? '✅ Saved' : '❌ Not set', data.hasCredentials);
+    html += mkStat('Google Auth', data.isAuthorized ? '✅ Connected' : '❌ Not connected', data.isAuthorized);
+    html += mkStat('Schedule', data.scheduledTime, true);
+    html += `</div>`;
+    if (data.lastTime) {
+      const ok = data.lastStatus === 'success';
+      html += `<div style="font-size:13px;padding:8px 12px;border-radius:6px;background:${ok?'var(--green-bg)':'var(--red-bg)'};color:${ok?'var(--green)':'var(--red)'};">
+        Last backup: <strong>${new Date(data.lastTime).toLocaleString('en-IN')}</strong> — ${data.lastStatus}
+      </div>`;
+    }
+    html += `<div style="font-size:12px;color:var(--muted);margin-top:8px;">
+      📁 Destination: <a href="${data.folderUrl}" target="_blank" style="color:var(--blue);">Open your Google Drive backup folder ↗</a>
+    </div>`;
+    body.innerHTML = html;
+
+    credCard.style.display = data.hasCredentials ? 'none' : 'block';
+
+    const tbody = document.getElementById('backup-history-body');
+    const hist = data.history || [];
+    if (!hist.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No backups recorded yet.</td></tr>';
+    } else {
+      tbody.innerHTML = hist.map((h, i) => {
+        const ok = h.status === 'success';
+        const dt = new Date(h.time).toLocaleString('en-IN');
+        const fileLink = h.link
+          ? `<a href="${h.link}" target="_blank" style="color:var(--blue);">${h.file}</a>`
+          : (h.file || '—');
+        return `<tr>
+          <td style="color:var(--hint);font-size:12px;">${i+1}</td>
+          <td style="font-size:12px;">${dt}</td>
+          <td><span class="badge b-est" style="font-size:10px;">${h.manual?'Manual':'Auto'}</span></td>
+          <td><span class="badge ${ok?'b-rec':'b-cn'}">${ok?'✅ OK':'❌ Error'}</span></td>
+          <td style="font-size:12px;">${fileLink}</td>
+          <td style="font-size:12px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;">${h.message||''}</td>
+        </tr>`;
+      }).join('');
+    }
+  } catch(e) {
+    document.getElementById('backup-status-body').innerHTML = `<span style="color:var(--red);">Error loading status: ${e.message}</span>`;
+  }
+}
+
+function saveCredentials() {
+  requirePassword('Save Google credentials', async function(pwd) {
+    const client_id = document.getElementById('b-client-id').value.trim();
+    const client_secret = document.getElementById('b-client-secret').value.trim();
+    if (!client_id || !client_secret) { toast('Enter both Client ID and Client Secret'); return; }
+    const res = await fetch(API+'/api/backup/set-credentials', {
+      method: 'POST', headers: authH(pwd), body: JSON.stringify({ client_id, client_secret })
+    });
+    const r = await res.json();
+    if (r.success) { toast('Credentials saved! Now click Connect Google Drive.'); loadBackupStatus(); }
+    else toast(r.error || 'Failed to save', true);
+  });
+}
+
+function authorizeGDrive() {
+  requirePassword('Connect Google Drive', async function(pwd) {
+    try {
+      const res = await fetch(API+'/api/backup/auth-url', { headers: { 'x-admin-password': pwd } });
+      const r = await res.json();
+      if (r.url) {
+        window.open(r.url, '_blank', 'width=500,height=650');
+        toast('Google login opened — authorize, then refresh this page');
+        setTimeout(loadBackupStatus, 5000);
+      } else toast(r.error || 'Could not get auth URL', true);
+    } catch(e) { toast(e.message, true); }
+  });
+}
+
+function disconnectGDrive() {
+  if (!confirm('Disconnect Google Drive? Auto-backups will stop until you reconnect.')) return;
+  requirePassword('Disconnect Google Drive', async function(pwd) {
+    const res = await fetch(API+'/api/backup/disconnect', { method:'POST', headers: authH(pwd) });
+    const r = await res.json();
+    if (r.success) { toast('Disconnected from Google Drive'); loadBackupStatus(); }
+    else toast(r.error || 'Failed', true);
+  });
+}
+
+function runBackupNow() {
+  requirePassword('Run manual backup', async function(pwd) {
+    const btn = document.getElementById('btn-run-backup');
+    const msgEl = document.getElementById('backup-run-msg');
+    btn.disabled = true; btn.textContent = '⏳ Backing up…'; msgEl.textContent = '';
+    try {
+      const res = await fetch(API+'/api/backup/run', { method:'POST', headers: authH(pwd) });
+      const r = await res.json();
+      if (r.success) {
+        toast('Backup successful!');
+        msgEl.style.color = 'var(--green)';
+        msgEl.innerHTML = r.link ? `✅ <a href="${r.link}" target="_blank" style="color:var(--green);">View file in Drive ↗</a>` : '✅ Done';
+      } else {
+        toast(r.message || 'Backup failed', true);
+        msgEl.style.color = 'var(--red)';
+        msgEl.textContent = '❌ ' + (r.message || 'Failed');
+      }
+    } catch(e) { toast(e.message, true); msgEl.textContent = '❌ ' + e.message; }
+    finally { btn.disabled = false; btn.textContent = '⬆️ Backup Now'; loadBackupStatus(); }
+  });
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+addInvItem();
+loadPartyDropdowns();
+</script>
+</body>
+</html>
