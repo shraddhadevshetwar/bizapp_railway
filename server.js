@@ -152,7 +152,6 @@ async function performBackup(manual = false) {
   try {
     db.pragma('wal_checkpoint(FULL)');
     const drive = google.drive({ version: 'v3', auth: oauth2Client });
-    await drive.files.get({ fileId: GDRIVE_FOLDER_ID, fields: 'id,name' });
     const fileStream = fs.createReadStream(DB_PATH);
     const response = await drive.files.create({
       requestBody: { name: fileName, parents: [GDRIVE_FOLDER_ID],
@@ -189,7 +188,7 @@ app.post('/api/backup/set-credentials', requireAuth, (req, res) => {
 });
 app.get('/api/backup/auth-url', requireAuth, (req, res) => {
   if (!loadTokens()) return res.status(400).json({ error: 'Credentials not set.' });
-  const url = oauth2Client.generateAuthUrl({ access_type:'offline', scope:['https://www.googleapis.com/auth/drive.file'], prompt:'consent' });
+  const url = oauth2Client.generateAuthUrl({ access_type:'offline', scope:['https://www.googleapis.com/auth/drive'], prompt:'consent' });
   res.json({ url });
 });
 app.get('/api/backup/oauth2callback', async (req, res) => {
