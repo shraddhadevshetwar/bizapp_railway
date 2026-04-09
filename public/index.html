@@ -475,6 +475,19 @@ table.dt tbody tr:hover td{background:#faf9f6;}
     </div>
   </div>
 
+  <!-- Restore -->
+  <div class="card">
+    <div class="card-title">Restore from Backup</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">
+      Download a <code>.db</code> file from your Google Drive folder and upload it here to restore your data.
+    </p>
+    <div class="btn-row" style="justify-content:flex-start;align-items:center;gap:12px;">
+      <input type="file" id="restore-file-input" accept=".db" style="display:none;" onchange="restoreFromFile()">
+      <button class="btn" style="background:var(--orange,#e67e22);color:#fff;" onclick="document.getElementById('restore-file-input').click()">⬇️ Restore from File</button>
+      <span id="restore-msg" style="font-size:13px;color:var(--muted);"></span>
+    </div>
+  </div>
+
   <!-- History -->
   <div class="card">
     <div class="card-title">Backup History (last 30)</div>
@@ -1233,6 +1246,42 @@ function disconnectGDrive() {
     const r = await res.json();
     if (r.success) { toast('Disconnected from Google Drive'); loadBackupStatus(); }
     else toast(r.error || 'Failed', true);
+  });
+}
+
+async function restoreFromFile() {
+  const fileInput = document.getElementById('restore-file-input');
+  const msgEl = document.getElementById('restore-msg');
+  const file = fileInput.files[0];
+  if (!file) return;
+  if (!confirm('⚠️ This will REPLACE all current data with the backup file. Are you sure?')) {
+    fileInput.value = ''; return;
+  }
+  requirePassword('Restore database', async function(pwd) {
+    msgEl.textContent = 'Uploading...';
+    try {
+      const buffer = await file.arrayBuffer();
+      const res = await fetch(API+'/api/backup/restore', {
+        method: 'POST',
+        headers: { 'x-admin-password': pwd, 'content-type': 'application/octet-stream' },
+        body: buffer
+      });
+      const r = await res.json();
+      if (r.success) {
+        msgEl.style.color = 'var(--green)';
+        msgEl.textContent = r.message;
+        toast('Database restored! Page will reload in 5 seconds.');
+        setTimeout(() => location.reload(), 5000);
+      } else {
+        msgEl.style.color = 'var(--red)';
+        msgEl.textContent = r.error || 'Restore failed';
+      }
+    } catch(e) {
+      msgEl.style.color = 'var(--red)';
+      msgEl.textContent = 'Error: ' + e.message;
+    } finally {
+      fileInput.value = '';
+    }
   });
 }
 

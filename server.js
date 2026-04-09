@@ -222,6 +222,22 @@ app.get('/api/backup/status', requireAuth, (req, res) => {
     scheduledTime: '11:45 PM IST daily', ...log });
 });
 app.post('/api/backup/run', requireAuth, async (req, res) => { res.json(await performBackup(true)); });
+app.post('/api/backup/restore', requireAuth, (req, res) => {
+  let body = [];
+  req.on('data', chunk => body.push(chunk));
+  req.on('end', () => {
+    try {
+      const buffer = Buffer.concat(body);
+      if (!buffer.length) return res.status(400).json({ error: 'No file received' });
+      db.close();
+      fs.writeFileSync(DB_PATH, buffer);
+      res.json({ success: true, message: `Database restored successfully (${Math.round(buffer.length/1024)} KB). Restarting...` });
+      setTimeout(() => process.exit(0), 500);
+    } catch(e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+});
 app.post('/api/backup/disconnect', requireAuth, (req, res) => {
   try {
     if (fs.existsSync(TOKENS_FILE)) { const d=JSON.parse(fs.readFileSync(TOKENS_FILE,'utf8')); delete d.tokens; fs.writeFileSync(TOKENS_FILE,JSON.stringify(d,null,2)); }
@@ -330,20 +346,31 @@ app.get('/api/ledger',(req,res)=>{
   if(!party_id)return res.status(400).json({error:'party_id required'});
   const party=db.prepare('SELECT * FROM parties WHERE id=?').get(party_id);
   if(!party)return res.status(404).json({error:'Party not found'});
+
+  // Calculate opening balance = static opening balance + all transactions BEFORE from_date
+  let openingBalance = party.opening_balance||0;
+  if(from_date){
+    const prevInv=db.prepare(`SELECT COALESCE(SUM(net_total),0) as total FROM invoices WHERE party_id=? AND inv_date < ?`).get(party_id,from_date);
+    const prevCn=db.prepare(`SELECT COALESCE(SUM(amount),0) as total FROM credit_notes WHERE party_id=? AND cn_date < ?`).get(party_id,from_date);
+    const prevRec=db.prepare(`SELECT COALESCE(SUM(amount),0) as total FROM receipts WHERE party_id=? AND rec_date < ?`).get(party_id,from_date);
+    const prevPay=db.prepare(`SELECT COALESCE(SUM(amount),0) as total FROM payments WHERE party_id=? AND pay_date < ?`).get(party_id,from_date);
+    openingBalance = openingBalance + prevInv.total + prevPay.total - prevRec.total - prevCn.total;
+  }
+
   const df=(col)=>`${col} >= COALESCE(?,'0000-00-00') AND ${col} <= COALESCE(?,'9999-12-31')`;
   const inv=db.prepare(`SELECT id,seq,inv_date as date,seq as ref,net_total as amount,'Estimate' as type,note as remarks FROM invoices WHERE party_id=? AND ${df('inv_date')} ORDER BY inv_date,id`).all(party_id,from_date||null,to_date||null);
   const cn=db.prepare(`SELECT id,seq,cn_date as date,seq as ref,amount,'Credit Note' as type,note as remarks FROM credit_notes WHERE party_id=? AND ${df('cn_date')} ORDER BY cn_date,id`).all(party_id,from_date||null,to_date||null);
   const rec=db.prepare(`SELECT id,seq,rec_date as date,seq as ref,amount,'Receipt' as type,remarks FROM receipts WHERE party_id=? AND ${df('rec_date')} ORDER BY rec_date,id`).all(party_id,from_date||null,to_date||null);
   const pay=db.prepare(`SELECT id,seq,pay_date as date,seq as ref,amount,'Payment' as type,remarks FROM payments WHERE party_id=? AND ${df('pay_date')} ORDER BY pay_date,id`).all(party_id,from_date||null,to_date||null);
   const txns=[...inv,...cn,...rec,...pay].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-  let balance=party.opening_balance||0;
+  let balance=openingBalance;
   const rows=txns.map(t=>{
     const debit=(t.type==='Estimate'||t.type==='Payment')?t.amount:0;
     const credit=(t.type==='Estimate'||t.type==='Payment')?0:t.amount;
     balance=balance+debit-credit;
     return{...t,debit,credit,balance};
   });
-  res.json({party,opening_balance:party.opening_balance||0,transactions:rows,closing_balance:balance});
+  res.json({party,opening_balance:openingBalance,transactions:rows,closing_balance:balance});
 });
 
 app.get('/api/next-no/:type',(req,res)=>{
