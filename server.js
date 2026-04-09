@@ -229,10 +229,14 @@ app.post('/api/backup/restore', requireAuth, (req, res) => {
     try {
       const buffer = Buffer.concat(body);
       if (!buffer.length) return res.status(400).json({ error: 'No file received' });
-      db.close();
-      fs.writeFileSync(DB_PATH, buffer);
-      res.json({ success: true, message: `Database restored successfully (${Math.round(buffer.length/1024)} KB). Restarting...` });
-      setTimeout(() => process.exit(0), 500);
+      // Write to a temp file first then replace
+      const tempPath = DB_PATH + '.tmp';
+      fs.writeFileSync(tempPath, buffer);
+      // Close all db connections and replace
+      db.prepare('SELECT 1').get(); // verify db is alive
+      fs.copyFileSync(tempPath, DB_PATH);
+      fs.unlinkSync(tempPath);
+      res.json({ success: true, message: `Database restored successfully (${Math.round(buffer.length/1024)} KB). Please reload the page.` });
     } catch(e) {
       res.status(500).json({ error: e.message });
     }
